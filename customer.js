@@ -1,6 +1,8 @@
 var inquirer = require('inquirer');
 var tablify = require('tablify').tablify;
-var conn = require('./dbConnection.js');
+var mySQL = require('./dbConnection.js');
+var conn = null;
+require("./commonds");
 
 var store = {
     products: null
@@ -18,6 +20,7 @@ var printProducts = async function ()
         FROM products AS prod INNER JOIN departments AS dept ON prod.department_id = dept.department_id \
         ORDER BY prod.product_name ASC";
     
+    conn = mySQL();
     await conn.query(queryStr, function(err, res) 
     {
         if (err) throw err;
@@ -25,32 +28,107 @@ var printProducts = async function ()
         var print = tablify(res, { keys: ['id', 'name', 'dept', 'price'], show_index: false });
         console.log(print);
         conn.end();
+        promptForOrder();
     });
 }
 
-var promptForOrder = function () 
+var promptForOrder = async function () 
 {
-    
+    await inquirer.prompt([
+        {
+          type: "input",
+          name: "productId",
+          default: null,
+          message: "Please type in a product ID:"
+        },
+        {
+          type: "input",
+          name: "quantity",
+          default: 1,
+          message: "Enter the quiantity for the selected product:",
+        }])
+        .then(function(response) 
+        {
+            var productId = parseInt(response.productId);
+            var quantity = parseInt(response.quantity);
+
+            if (productId && quantity)
+            {
+                verifyOrder(productId, quantity);
+            }
+            else
+            {
+                console.log("This order run into a problem, please start again");
+                promptForOrder();
+            }
+        });
 }
 
-var verifyOrder = function () 
+var verifyOrder = function (productId, quantity) 
 {
-    
+    var i = store.products.indexOfKeyValue("id", productId);
+    var selected = store.products[i];
+
+    if(quantity <= selected.stock)
+    {
+        completeOrder(selected, quantity);
+    }
+    else
+    {
+        cancelOrder();
+    }
 }
 
-var completeOrder = function () 
+var completeOrder = async function (selected, quantity) 
 {
-    
+    console.log("Completing order ...");
+    selected.stock = selected.stock - quantity;
+    queryStr = "UPDATE products SET ? WHERE ?";
+
+    conn = mySQL();
+    await conn.query(queryStr, [{ stock_quantity: selected.stock }, { product_id: selected.id } ], function(err, res) 
+    {
+        if (err) throw err;
+        
+        var print = [
+            ["ID", "Item", "price", "Quantity", "Total"],
+            [selected.id, selected.name, selected.price, quantity, selected.price * quantity]
+        ];
+        print = tablify(print, { has_header: true, show_index: false });
+        console.log("Order Details.");
+        console.log(print);
+        conn.end();
+        endOrStartAgain();
+    });
 }
 
 var cancelOrder = function () 
 {
-    
+    console.log("Sorry but our stock is to short to fulfill your demand! This order cannot be completed.");
+    endOrStartAgain();
 }
 
-var endOrStartAgain = function () 
+var endOrStartAgain = async function () 
 {
-    
+    await inquirer.prompt([
+        {
+          type: "list",
+          name: "continue",
+          default: null,
+          message: "",
+          choices: ["Continue Shopping", "Exit"]
+        }])
+        .then(function(response) 
+        {
+            switch(response.continue)
+            {
+                case "Continue Shopping":
+                    init();
+                    break;
+                default:
+                    break;
+            }
+        });
 }
 
 init();
