@@ -1,11 +1,11 @@
 var inquirer = require('inquirer');
 var tablify = require('tablify').tablify;
 var mySQL = require('./dbConnection.js');
-var conn = null;
 require("./commonds");
 
 var store = {
-    products: null
+    products: null,
+    conn: null
 }
 
 var init = function () 
@@ -20,14 +20,14 @@ var printProducts = async function ()
         FROM products AS prod INNER JOIN departments AS dept ON prod.department_id = dept.department_id \
         ORDER BY prod.product_name ASC";
     
-    conn = mySQL();
-    await conn.query(queryStr, function(err, res) 
+    store.conn = mySQL();
+    await store.conn.query(queryStr, function(err, res) 
     {
         if (err) throw err;
         store.products = res;
         var print = tablify(res, { keys: ['id', 'name', 'dept', 'price'], show_index: false });
         console.log(print);
-        conn.end();
+        store.conn.end();
         promptForOrder();
     });
 }
@@ -85,8 +85,8 @@ var completeOrder = async function (selected, quantity)
     selected.stock = selected.stock - quantity;
     queryStr = "UPDATE products SET ? WHERE ?";
 
-    conn = mySQL();
-    await conn.query(queryStr, [{ stock_quantity: selected.stock }, { product_id: selected.id } ], function(err, res) 
+    store.conn = mySQL();
+    await store.conn.query(queryStr, [{ stock_quantity: selected.stock }, { product_id: selected.id } ], function(err, res) 
     {
         if (err) throw err;
         
@@ -97,7 +97,7 @@ var completeOrder = async function (selected, quantity)
         print = tablify(print, { has_header: true, show_index: false });
         console.log("Order Details.");
         console.log(print);
-        conn.end();
+        store.conn.end();
         endOrStartAgain();
     });
 }
