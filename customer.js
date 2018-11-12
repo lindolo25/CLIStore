@@ -67,32 +67,38 @@ var promptForOrder = async function ()
 var verifyOrder = function (productId, quantity) 
 {
     var i = store.products.indexOfKeyValue("id", productId);
-    var selected = store.products[i];
+    if(i)
+    {
+        var selected = store.products[i];
 
-    if(quantity <= selected.stock)
-    {
-        completeOrder(selected, quantity);
+        if(quantity <= selected.stock)
+        {
+            completeOrder(selected, quantity);
+        }
+        else
+        {
+            cancelOrder("Sorry but our stock is to short to fulfill your demand! This order cannot be completed.");
+        }
     }
-    else
-    {
-        cancelOrder();
-    }
+    else cancelOrder("This product does not exist, the order cannot be completed.");    
 }
 
 var completeOrder = async function (selected, quantity) 
 {
     console.log("Completing order ...");
     selected.stock = selected.stock - quantity;
-    queryStr = "UPDATE products SET ? WHERE ?";
-
+    var queryStr = "UPDATE products SET ?, ? WHERE ?";
+    var total = selected.price * quantity;
+    selected.saleTotal = selected.saleTotal + total;
+    
     store.conn = mySQL();
-    await store.conn.query(queryStr, [{ stock_quantity: selected.stock }, { product_id: selected.id } ], function(err, res) 
+    await store.conn.query(queryStr, [{ stock_quantity: selected.stock }, { product_sale: selected.saleTotal }, { product_id: selected.id } ], function(err, res) 
     {
         if (err) throw err;
         
         var print = [
             ["ID", "Item", "price", "Quantity", "Total"],
-            [selected.id, selected.name, selected.price, quantity, selected.price * quantity]
+            [selected.id, selected.name, selected.price, quantity, total]
         ];
         print = tablify(print, { has_header: true, show_index: false });
         console.log("Order Details.");
@@ -102,9 +108,9 @@ var completeOrder = async function (selected, quantity)
     });
 }
 
-var cancelOrder = function () 
+var cancelOrder = function (message) 
 {
-    console.log("Sorry but our stock is to short to fulfill your demand! This order cannot be completed.");
+    console.log(message);
     endOrStartAgain();
 }
 
