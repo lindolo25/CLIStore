@@ -67,7 +67,7 @@ var promptForOrder = async function ()
 var verifyOrder = function (productId, quantity) 
 {
     var i = store.products.indexOfKeyValue("id", productId);
-    if(i)
+    if(i > -1)
     {
         var selected = store.products[i];
 

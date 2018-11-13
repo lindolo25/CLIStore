@@ -155,6 +155,8 @@ var updateInventory = async function (selected, quantity)
     });
 }
 
+
+
 var cancelOperation = function (message) 
 {
     console.logWithBars(message);

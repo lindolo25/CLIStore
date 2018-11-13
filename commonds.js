@@ -21,7 +21,7 @@ Array.prototype.indexOfKeyValue = Array.prototype.f = function(key, value)
         }
     }
 
-    return null;
+    return -1;
 }
 
 console.logWithBars = function(message)
