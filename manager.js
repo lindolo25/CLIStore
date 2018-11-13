@@ -28,7 +28,7 @@ var init = async function ()
                     printLowStock();
                     break;
                 case "Add to Inventory":
-                    promptForinventory();
+                    promptForInventory();
                     break;
                 case "Add New Product":
                     init();
@@ -70,14 +70,23 @@ var printLowStock = async function ()
     await store.conn.query(queryStr, function(err, res) 
     {
         if (err) throw err;
-        var print = tablify(res, { keys: ['id', 'name', 'dept', 'price', "saleTotal", "stock"], show_index: false });
-        console.log(print);
+        else if (res.length > 0)
+        {
+            var print = tablify(res, { keys: ['id', 'name', 'dept', 'price', "saleTotal", "stock"], show_index: false });
+            console.log(print);
+        }
+        else 
+        {
+            console.log("-----------------------------------");
+            console.log("All products have sufficient stock.");
+            console.log("-----------------------------------");
+        }
         store.conn.end();
         init();
     });
 }
 
-var promptForinventory = async function () 
+var promptForInventory = async function () 
 {
     await inquirer.prompt([
         {
@@ -103,8 +112,10 @@ var promptForinventory = async function ()
             }
             else
             {
-                console.log("This order run into a problem, please start again");
-                promptForOrder();
+                console.log("--------------------------------------------------");
+                console.log("This order run into a problem, please start again.");
+                console.log("--------------------------------------------------");
+                promptForInventory();
             }
         });
 }
@@ -152,7 +163,10 @@ var updateInventory = async function (selected, quantity)
 
 var cancelOperation = function (message) 
 {
-    console.log(message);
+    var rep = message.replace(/./gi, "-");
+    console.log(rep);
+    console.log(message);    
+    console.log(rep);
     init();
 }
 
