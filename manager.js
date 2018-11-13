@@ -75,12 +75,8 @@ var printLowStock = async function ()
             var print = tablify(res, { keys: ['id', 'name', 'dept', 'price', "saleTotal", "stock"], show_index: false });
             console.log(print);
         }
-        else 
-        {
-            console.log("-----------------------------------");
-            console.log("All products have sufficient stock.");
-            console.log("-----------------------------------");
-        }
+        else console.logWithBars("All products have sufficient stock.");
+        
         store.conn.end();
         init();
     });
@@ -112,9 +108,7 @@ var promptForInventory = async function ()
             }
             else
             {
-                console.log("--------------------------------------------------");
-                console.log("This order run into a problem, please start again.");
-                console.log("--------------------------------------------------");
+                console.logWithBars("This order run into a problem, please start again.");
                 promptForInventory();
             }
         });
@@ -154,7 +148,7 @@ var updateInventory = async function (selected, quantity)
             [selected.id, selected.name, selected.price, selected.stock, newStock]
         ];
         print = tablify(print, { has_header: true, show_index: false });
-        console.log("Product updated sussefully.");
+        console.logWithBars("Product updated sussefully.");
         console.log(print);
         store.conn.end();
         init();
@@ -163,10 +157,7 @@ var updateInventory = async function (selected, quantity)
 
 var cancelOperation = function (message) 
 {
-    var rep = message.replace(/./gi, "-");
-    console.log(rep);
-    console.log(message);    
-    console.log(rep);
+    console.logWithBars(message);
     init();
 }
 

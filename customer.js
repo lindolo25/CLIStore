@@ -58,7 +58,7 @@ var promptForOrder = async function ()
             }
             else
             {
-                console.log("This order run into a problem, please start again");
+                console.logWithBars("This order run into a problem, please start again");
                 promptForOrder();
             }
         });
@@ -101,7 +101,7 @@ var completeOrder = async function (selected, quantity)
             [selected.id, selected.name, selected.price, quantity, total]
         ];
         print = tablify(print, { has_header: true, show_index: false });
-        console.log("Order Details.");
+        console.logWithBars("Order Details.");
         console.log(print);
         store.conn.end();
         endOrStartAgain();
@@ -110,7 +110,7 @@ var completeOrder = async function (selected, quantity)
 
 var cancelOrder = function (message) 
 {
-    console.log(message);
+    console.logWithBars(message);
     endOrStartAgain();
 }
 

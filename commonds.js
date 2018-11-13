@@ -23,3 +23,11 @@ Array.prototype.indexOfKeyValue = Array.prototype.f = function(key, value)
 
     return null;
 }
+
+console.logWithBars = function(message)
+{
+    var rep = message.replace(/./gi, "-");
+    console.log(rep);
+    console.log(message);
+    console.log(rep);
+}
