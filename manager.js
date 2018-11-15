@@ -5,6 +5,7 @@ require("./commonds");
 
 var store = {
     products: null,
+    dept: null,
     conn: null
 }
 
@@ -31,7 +32,7 @@ var init = async function ()
                     promptForInventory();
                     break;
                 case "Add New Product":
-                    init();
+                    getDepartments();
                     break;
                 default:
                     break;
@@ -155,7 +156,85 @@ var updateInventory = async function (selected, quantity)
     });
 }
 
+var promptNewProduct = async function(dept)
+{
+    store.dept = dept;
+    deptChoises = []
+    dept.forEach(item => deptChoises.push(item.name));
 
+    await inquirer.prompt([
+        {
+          type: "list",
+          name: "dept",
+          default: null,
+          message: "Select a department:",
+          choices: deptChoises
+        },
+        {
+          type: "input",
+          name: "name",
+          message: "Type in the product name:",
+        },
+        {
+          type: "input",
+          name: "price",
+          message: "Type in the price:",
+        }])
+        .then(function(response) 
+        {
+            var name = response.name.trim();
+            var price = parseFloat(response.price);
+            var deptIndex = store.dept.indexOfKeyValue("name", response.dept.trim());
+
+            if (name && price && deptIndex > -1)
+            {
+                completeNewProduct(name, price, deptIndex);
+            }
+            else
+            {
+                console.logWithBars("There are errors on the input, please start again.");
+                promptNewProduct(dept);
+            }
+        });
+}
+
+var getDepartments = async function()
+{
+    var queryStr = "SELECT department_id AS id, department_name AS name FROM departments";
+    store.conn = mySQL();
+    store.conn.query(queryStr, function(err, res) 
+    {
+        if (err) throw err;
+        promptNewProduct(res);
+        store.conn.end();
+    });
+}
+
+var completeNewProduct = async function (name, price, deptIndex) 
+{
+    console.log("Saving to database ...");
+    var queryStr = "INSERT INTO products SET ?, ?, ?";
+    
+    store.conn = mySQL();
+    await store.conn.query(queryStr, [
+            { department_id: store.dept[deptIndex].id }, 
+            { product_name: name }, 
+            { price: price }
+        ], function(err, res) 
+        {
+            if (err) throw err;
+            
+            var print = [
+                ["Id", "Item", "Department", "price"],
+                [res.insertId, name, store.dept[deptIndex].name, price]
+            ];
+            print = tablify(print, { has_header: true, show_index: false });
+            console.logWithBars("Product created sussefully.");
+            console.log(print);
+            store.conn.end();
+            init();
+        });
+}
 
 var cancelOperation = function (message) 
 {
